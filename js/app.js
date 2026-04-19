@@ -28,7 +28,22 @@ let appData = {
 
 /* ── 초기화 ── */
 document.addEventListener('DOMContentLoaded', () => {
-  initLogin();
+  // 세션 복원 확인
+  if (localStorage.getItem('aircap_session') === 'authenticated') {
+    // 자동 로그인
+    document.getElementById('login-overlay').classList.add('hidden');
+    showLoading();
+    loadData().then(() => {
+      hideLoading();
+      showDashboard();
+    }).catch(err => {
+      console.error('Data load error:', err);
+      hideLoading();
+      showDashboard();
+    });
+  } else {
+    initLogin();
+  }
 });
 
 /* ── 로그인 처리 ── */
@@ -65,6 +80,9 @@ function initLogin() {
       // 로그인 성공
       errorMsg.classList.add('hidden');
       appData.isLoggedIn = true;
+      
+      // 세션 저장 (브라우저 닫기 전까지 유지)
+      localStorage.setItem('aircap_session', 'authenticated');
       
       // 백그라운드에서 데이터 로딩 시작
       showLoading();
