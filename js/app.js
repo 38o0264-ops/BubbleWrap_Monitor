@@ -213,23 +213,28 @@ function showDashboard() {
 }
 
 /* ── 메트릭 업데이트 ── */
-function updateMetrics() {
-  // 최신 조사시간
+async function updateMetrics() {
+  // 최신 조사시간 - last_update.txt에서 읽어옴
   const lastUpdateEl = document.getElementById('last-update-time');
-  if (appData.latestDate) {
-    // UTC를 KST(한국 시간)로 변환 (+9시간)
-    const kstDate = new Date(appData.latestDate.getTime() + (9 * 60 * 60 * 1000));
-    const formatted = kstDate.toLocaleString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'UTC'
-    });
-    lastUpdateEl.textContent = formatted;
-  } else {
-    lastUpdateEl.textContent = '수집 기록 없음';
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/38o0264-ops/BubbleWrap_Monitor/main/last_update.txt?t=' + Date.now());
+    const updateTime = await response.text();
+    if (updateTime && updateTime.trim()) {
+      lastUpdateEl.textContent = updateTime.trim();
+    } else if (appData.latestDate) {
+      const formatted = appData.latestDate.toLocaleDateString('ko-KR');
+      lastUpdateEl.textContent = formatted;
+    } else {
+      lastUpdateEl.textContent = '수집 기록 없음';
+    }
+  } catch (e) {
+    // fallback to date from data
+    if (appData.latestDate) {
+      const formatted = appData.latestDate.toLocaleDateString('ko-KR');
+      lastUpdateEl.textContent = formatted;
+    } else {
+      lastUpdateEl.textContent = '수집 기록 없음';
+    }
   }
   
   // 최저 단가 (최신 날짜 기준)
