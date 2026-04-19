@@ -28,10 +28,14 @@ let appData = {
 
 /* ── 초기화 ── */
 document.addEventListener('DOMContentLoaded', () => {
+  // 로그인창 기본 숨김 (깜빡임 방지)
+  const loginOverlay = document.getElementById('login-overlay');
+  loginOverlay.style.opacity = '0';
+  
   // 세션 복원 확인
   if (localStorage.getItem('aircap_session') === 'authenticated') {
-    // 자동 로그인
-    document.getElementById('login-overlay').classList.add('hidden');
+    // 자동 로그인 - 로그인창 숨김 유지
+    loginOverlay.classList.add('hidden');
     showLoading();
     loadData().then(() => {
       hideLoading();
@@ -42,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
       showDashboard();
     });
   } else {
+    // 세션 없음 - 로그인창 표시
+    loginOverlay.style.opacity = '1';
     initLogin();
   }
 });
