@@ -191,9 +191,10 @@ body {
 
 /* ── 메인 대시보드 ── */
 .main-dashboard {
-  max-width: 1400px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   opacity: 1;
   transition: opacity 0.5s ease;
 }
@@ -228,7 +229,7 @@ body {
 /* 메트릭 카드 */
 .metrics-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -274,6 +275,7 @@ body {
 
 .news-card {
   grid-column: span 1;
+  min-width: 0;
 }
 
 .news-content ul {
@@ -284,8 +286,8 @@ body {
 
 .news-content li {
   color: var(--text-primary);
-  font-size: 0.95rem;
-  line-height: 1.8;
+  font-size: 0.9rem;
+  line-height: 1.6;
   position: relative;
   padding-left: 1rem;
 }
@@ -349,6 +351,7 @@ body {
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 table {
@@ -483,6 +486,18 @@ a:hover {
 }
 
 /* 반응형 */
+@media (max-width: 1200px) {
+  .metrics-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .metrics-container {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .main-dashboard {
     padding: 1rem;
