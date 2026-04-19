@@ -39,14 +39,14 @@ function initLogin() {
   const loginOverlay = document.getElementById('login-overlay');
   
   // Enter 키 처리
-  passwordInput.addEventListener('keypress', (e) => {
+  passwordInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter') {
-      checkPassword();
+      await checkPassword();
     }
   });
   
   // 버튼 클릭
-  submitBtn.addEventListener('click', checkPassword);
+  submitBtn.addEventListener('click', async () => await checkPassword());
   
   // SHA-256 해시 함수
   async function sha256(message) {
