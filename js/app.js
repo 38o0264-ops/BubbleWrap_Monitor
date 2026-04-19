@@ -217,12 +217,15 @@ function updateMetrics() {
   // 최신 조사시간
   const lastUpdateEl = document.getElementById('last-update-time');
   if (appData.latestDate) {
-    const formatted = appData.latestDate.toLocaleString('ko-KR', {
+    // UTC를 KST(한국 시간)로 변환 (+9시간)
+    const kstDate = new Date(appData.latestDate.getTime() + (9 * 60 * 60 * 1000));
+    const formatted = kstDate.toLocaleString('ko-KR', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC'
     });
     lastUpdateEl.textContent = formatted;
   } else {
