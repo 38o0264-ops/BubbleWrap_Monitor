@@ -30,7 +30,7 @@ let appData = {
 document.addEventListener('DOMContentLoaded', () => {
   // 로그인창 기본 숨김 (깜빡임 방지)
   const loginOverlay = document.getElementById('login-overlay');
-  loginOverlay.style.opacity = '0';
+  loginOverlay.style.display = 'none';
   
   // 세션 복원 확인
   if (localStorage.getItem('aircap_session') === 'authenticated') {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   } else {
     // 세션 없음 - 로그인창 표시
-    loginOverlay.style.opacity = '1';
+    loginOverlay.style.display = 'flex';
     initLogin();
   }
 });
@@ -320,11 +320,23 @@ function createDataTable() {
       ? '<span style="color: #ff4b4b; font-weight: 500;">품절</span>'
       : `<a href="${row.product_url || '#'}" target="_blank">판매중 🔗</a>`;
     
-    const statusIcon = row.status ? row.status.charAt(0) : '⚪';
+    // 상태 표시 (수집=녹색, 수동=회색, 오류=빨강)
+    let statusClass = 'status-neutral';
+    let statusText = '⚪';
+    if (row.status === '수집') {
+      statusClass = 'status-success';
+      statusText = '●';
+    } else if (row.status === '수동') {
+      statusClass = 'status-manual';
+      statusText = '●';
+    } else if (row.status === '오류') {
+      statusClass = 'status-error';
+      statusText = '●';
+    }
     
     html += `
       <tr class="${rowClass}" style="background-color: ${bgColor};">
-        <td style="text-align: center; font-size: 1.2rem;">${statusIcon}</td>
+        <td style="text-align: center;" class="${statusClass}">${statusText}</td>
         <td>${row.company}</td>
         <td>${row.product}</td>
         <td>${row.usage_scope || '범용'}</td>
