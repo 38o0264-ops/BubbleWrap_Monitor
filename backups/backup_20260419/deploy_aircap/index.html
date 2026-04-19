@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>에어캡 단가 모니터링</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.58.0/build/stlite.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <style>
+      html, body, #root {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
+        background-attachment: fixed !important;
+        overflow: hidden;
+        font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      }
+      #boot-mask {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 999998;
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        transition: opacity 1s ease;
+      }
+      /* [로딩 중 스크린] */
+      .bridge-text {
+        color: white !important; font-size: 1.1rem !important;
+        font-weight: 700 !important; line-height: 1.6 !important;
+        text-align: center; margin-top: 40vh;
+        transition: opacity 0.3s ease;
+      }
+      #root { opacity: 0; transition: opacity 0.6s ease; position: relative; z-index: 1000; }
+      #status-board { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 400px; z-index: 9999999; transition: opacity 0.5s ease; pointer-events: none; }
+      .log-card { background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.4); padding: 0.8rem 1.2rem; border-radius: 15px; width: 100%; font-size: 0.85rem; }
+      .stlite-mountable-loading-screen, [data-testid="stSkeleton"], .stPageLoading { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <div id="boot-mask">
+      <div class="bridge-text" id="bridge-text">여러 사이트에서 정보를 찾아오는 중입니다.<br>잠시만 기다려주세요</div>
+    </div>
+    <div id="status-board"></div>
+    <div id="root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.58.0/build/stlite.js"></script>
+    <script>
+      var statusBoard = document.getElementById('status-board');
+      var bootMask = document.getElementById('boot-mask');
+      var bridgeText = document.getElementById('bridge-text');
+      var displayed = {};
+      var isHiding = false;
+      var loginRevealed = false;
+      var translations = [
+        { en: 'Loading Pyodide', ko: '🚀 보안 아키텍처 가동 중...' },
+        { en: 'Loading pandas', ko: '📊 데이터 분석 엔진 준비 중...' },
+        { en: 'Initializing', ko: '🔐 보안 접속 관문 제어 중...' }
+      ];
+      function addLog(msg) {
+        if (displayed[msg]) return;
+        displayed[msg] = true;
+        var card = document.createElement('div');
+        card.className = 'log-card';
+        card.textContent = msg;
+        statusBoard.appendChild(card);
+        if (statusBoard.childNodes.length > 3) statusBoard.removeChild(statusBoard.firstChild);
+      }
+      function transitionToApp() {
+        if (isHiding) return;
+        isHiding = true;
+        statusBoard.style.opacity = '0';
+        bootMask.style.opacity = '0';
+        setTimeout(function() { bootMask.style.display = 'none'; statusBoard.style.display = 'none'; }, 1000);
+      }
+      function revealLogin() {
+        if (loginRevealed) return;
+        loginRevealed = true;
+        transitionToApp();
+        // 1번 팀 퇴장
+        bridgeText.style.opacity = '0';
+        setTimeout(function() { bridgeText.style.display = 'none'; }, 300);
+        // 2번 팀 등장: 로드된 앱의 부모인 #root를 서서히 노출
+        var rootElement = document.getElementById('root');
+        if (rootElement) {
+          setTimeout(function() {
+            rootElement.style.opacity = '1';
+          }, 200);
+        }
+      }
+
+      stlite.mount(
+        {
+          requirements: ["pandas", "plotly==5.18.0", "six"],
+          entrypoint: "app.txt",
+          files: {
+            "app.txt": { url: "aircap_final_boss.txt" },
+            "price_history.csv": { url: "https://raw.githubusercontent.com/38o0264-ops/BubbleWrap_Monitor/main/price_history.csv" },
+            "last_update.txt": { url: "https://raw.githubusercontent.com/38o0264-ops/BubbleWrap_Monitor/main/last_update.txt" }
+          },
+        },
+        document.getElementById("root")
+      );
+
+      // 비번창이 나타나면 → 로그인 폼 노출
+      var loadObs = new MutationObserver(function() {
+        if (document.querySelector('input[type="password"]')) {
+          revealLogin();
+          loadObs.disconnect();
+          return;
+        }
+        var lt = document.querySelector('.stlite-mountable-loading-screen');
+        if (lt && lt.innerText) {
+          for (var i = 0; i < translations.length; i++) {
+            if (lt.innerText.indexOf(translations[i].en) !== -1) addLog(translations[i].ko);
+          }
+        }
+      });
+      loadObs.observe(document.body, { childList: true, subtree: true });
+    </script>
+  </body>
+</html>
