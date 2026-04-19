@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 import os
 
-CSV_PATH = "price_history.txt"
+CSV_PATH = "price_history.csv"
 TIMESTAMP_PATH = "last_update.txt"
 
 def load_data():
