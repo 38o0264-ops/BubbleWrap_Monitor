@@ -37,4 +37,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto-update price data"
-          file_pattern: "price_history.csv price_history.txt last_update.txt"
+          file_pattern: "price_history.csv last_update.txt"
