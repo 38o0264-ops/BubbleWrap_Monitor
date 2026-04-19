@@ -229,7 +229,7 @@ body {
 /* 메트릭 카드 */
 .metrics-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr 2fr;
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -246,6 +246,13 @@ body {
 .metric-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 뉴스 카드 - 1행 유지 */
+.news-card ul li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .metric-label {
