@@ -7,8 +7,8 @@
 const CONFIG = {
   // GitHub raw CSV URL
   CSV_URL: 'https://raw.githubusercontent.com/38o0264-ops/BubbleWrap_Monitor/main/price_history.csv',
-  // 비밀번호 (실제 환경에서는 서버사이드 검증 권장)
-  PASSWORD: '10077',
+  // 비밀번호 SHA-256 해시 (원본: '10077') - 소스 노출 방지
+  PASSWORD_HASH: 'a665a45920422f9d417e4857efdc2691a89a1e96579b0b34444cbdf1d2a7f37',
   // 차트 색상
   COMPANY_COLORS: {
     '박스몰': '#3366ff',
@@ -48,10 +48,20 @@ function initLogin() {
   // 버튼 클릭
   submitBtn.addEventListener('click', checkPassword);
   
-  function checkPassword() {
+  // SHA-256 해시 함수
+  async function sha256(message) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function checkPassword() {
     const input = passwordInput.value;
+    const inputHash = await sha256(input);
     
-    if (input === CONFIG.PASSWORD) {
+    if (inputHash === CONFIG.PASSWORD_HASH) {
       // 로그인 성공
       errorMsg.classList.add('hidden');
       appData.isLoggedIn = true;
