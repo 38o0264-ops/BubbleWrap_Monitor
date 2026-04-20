@@ -26,7 +26,8 @@ def run_update():
             print("기존 데이터가 없습니다. 신규 데이터를 생성할 수 없으므로 종료합니다. (수동 데이터 필요)")
             return
             
-        now = datetime.datetime.now()
+        # KST (한국시간, UTC+9)로 변환
+        now = datetime.datetime.now() + datetime.timedelta(hours=9)
         today = pd.Timestamp(now).normalize()
         
         # 오늘 날짜 데이터 확보 로직 (app.py와 동일)
