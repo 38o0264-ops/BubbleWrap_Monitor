@@ -376,17 +376,28 @@ function createChart() {
   chartContainer.classList.remove('hidden');
   chartInfo.classList.add('hidden');
   
-  // 차트 데이터 준비
+  // 차트 데이터 준비 - 각 회사별 날짜별 최저가만 표시
   const chartData = [];
   const companies = [...new Set(appData.processedData.map(row => row.company))];
   
   companies.forEach(company => {
     const companyData = appData.processedData.filter(row => row.company === company);
-    const sortedData = companyData.sort((a, b) => a.dateObj - b.dateObj);
+    
+    // 날짜별로 그룹화하여 각 날짜의 최저 convertedPrice 선택
+    const dateGroups = {};
+    companyData.forEach(row => {
+      const dateKey = row.dateObj.toDateString();
+      if (!dateGroups[dateKey] || row.convertedPrice < dateGroups[dateKey].convertedPrice) {
+        dateGroups[dateKey] = row;
+      }
+    });
+    
+    // 날짜 순으로 정렬
+    const cheapestPerDate = Object.values(dateGroups).sort((a, b) => a.dateObj - b.dateObj);
     
     chartData.push({
-      x: sortedData.map(row => row.dateObj),
-      y: sortedData.map(row => row.convertedPrice),
+      x: cheapestPerDate.map(row => row.dateObj),
+      y: cheapestPerDate.map(row => row.convertedPrice),
       mode: 'lines+markers',
       name: company,
       line: {
