@@ -383,9 +383,22 @@ function createChart() {
   companies.forEach(company => {
     const companyData = appData.processedData.filter(row => row.company === company);
     
+    // 20x30 제품만 필터링 (가장 표준적인 사이즈)
+    const standardSizeData = companyData.filter(row => 
+      (row.width == 20 && row.height == 30) || 
+      (row.width == 25 && row.height == 35) ||
+      row.productName.includes('20') && row.productName.includes('30')
+    );
+    
+    // 20x30이 없으면 해당 회사의 대표 제품(가장 많이 등장한 제품) 선택
+    let chartDataRows = standardSizeData;
+    if (chartDataRows.length === 0) {
+      chartDataRows = companyData;
+    }
+    
     // 날짜별로 그룹화하여 각 날짜의 최저 convertedPrice 선택
     const dateGroups = {};
-    companyData.forEach(row => {
+    chartDataRows.forEach(row => {
       const dateKey = row.dateObj.toDateString();
       if (!dateGroups[dateKey] || row.convertedPrice < dateGroups[dateKey].convertedPrice) {
         dateGroups[dateKey] = row;
