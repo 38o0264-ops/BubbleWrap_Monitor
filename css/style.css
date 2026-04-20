@@ -3,19 +3,19 @@
    ────────────────────────────────────── */
 
 :root {
-  --bg-dark: #1a1c2c;
-  --bg-card: #1a1a2e;
-  --bg-card-alt: #16213e;
-  --primary-blue: #5ab4ff;
-  --accent-green: #00d68f;
-  --accent-orange: #ffaa00;
-  --accent-purple: #9d4edd;
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
+  --bg-dark: #f5f7fa;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f4f8;
+  --primary-blue: #1976d2;
+  --accent-green: #2e7d32;
+  --accent-orange: #ed6c02;
+  --accent-purple: #7b1fa2;
+  --text-primary: #1a1a1a;
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-muted: rgba(0, 0, 0, 0.5);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -26,7 +26,7 @@
 
 body {
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg-dark);
+  background: #ffffff;
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
@@ -205,12 +205,12 @@ body {
 
 /* 헤더 */
 .main-header {
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%);
   padding: 2rem 2.5rem;
   border-radius: 16px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .main-header h1 {
@@ -221,7 +221,7 @@ body {
 }
 
 .main-header p {
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.95rem;
   margin: 0.3rem 0 0 0;
 }
@@ -245,7 +245,7 @@ body {
 
 .metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* 뉴스 카드 - 1행 유지 */
