@@ -17,7 +17,9 @@ def load_data():
     return pd.DataFrame()
 
 def run_update():
-    print(f"[{datetime.datetime.now()}] 클라우드 크롤링 시작...")
+    # KST (한국시간, UTC+9) 기준 현재 시간
+    kst_now = datetime.datetime.now() + datetime.timedelta(hours=9)
+    print(f"[{kst_now}] 클라우드 크롤링 시작...")
     try:
         results = crawler.crawl_all()
         df_full = load_data()
@@ -26,9 +28,8 @@ def run_update():
             print("기존 데이터가 없습니다. 신규 데이터를 생성할 수 없으므로 종료합니다. (수동 데이터 필요)")
             return
             
-        # KST (한국시간, UTC+9)로 변환
-        now = datetime.datetime.now() + datetime.timedelta(hours=9)
-        today = pd.Timestamp(now).normalize()
+        # KST 기준 오늘 날짜
+        today = pd.Timestamp(kst_now).normalize()
         
         # 오늘 날짜 데이터 확보 로직 (app.py와 동일)
         if today not in pd.to_datetime(df_full["date"]).values:
@@ -65,9 +66,9 @@ def run_update():
         # 저장
         df_full.to_csv(CSV_PATH, index=False)
         with open(TIMESTAMP_PATH, "w", encoding="utf-8") as f:
-            f.write(now.strftime("%Y-%m-%d %H:%M:%S"))
+            f.write(kst_now.strftime("%Y-%m-%d %H:%M:%S"))
             
-        print(f"[{now}] 업데이트 완료: {matched}건 / 전체 {total_items}건")
+        print(f"[{kst_now}] 업데이트 완료: {matched}건 / 전체 {total_items}건")
         
     except Exception as e:
         print(f"크롤링 중 오류 발생: {e}")
