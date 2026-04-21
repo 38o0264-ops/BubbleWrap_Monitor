@@ -288,7 +288,6 @@ function createDataTable() {
     <table>
       <thead>
         <tr>
-          <th>상태</th>
           <th>회사명</th>
           <th>상품명</th>
           <th>사용범위</th>
@@ -331,12 +330,8 @@ function createDataTable() {
       statusText = '●';
     } else if (row.status === '오류') {
       statusClass = 'status-error';
-      statusText = '●';
-    }
-    
     html += `
       <tr class="${rowClass}" style="background-color: ${bgColor};">
-        <td style="text-align: center;" class="${statusClass}">${statusText}</td>
         <td>${row.company}</td>
         <td>${row.product}</td>
         <td>${row.usage_scope || '범용'}</td>
@@ -362,17 +357,16 @@ function createChart() {
   const chartContainer = document.getElementById('price-chart');
   const chartInfo = document.getElementById('chart-info');
   
-  // 날짜가 2개 이상인지 확인
-  const uniqueDates = [...new Set(appData.processedData.map(row => 
-    row.dateObj ? row.dateObj.toDateString() : null
-  ))].filter(d => d);
+  // Debug: Check if data exists
+  console.log('appData.processedData:', appData.processedData);
+  console.log('Data length:', appData.processedData.length);
   
-  if (uniqueDates.length < 2) {
-    chartContainer.classList.add('hidden');
-    chartInfo.classList.remove('hidden');
+  if (!appData.processedData || appData.processedData.length === 0) {
+    console.log('No data available for chart');
     return;
   }
   
+  // Always show chart
   chartContainer.classList.remove('hidden');
   chartInfo.classList.add('hidden');
   
@@ -385,9 +379,9 @@ function createChart() {
     
     // 20x30 제품만 필터링 (가장 표준적인 사이즈)
     const standardSizeData = companyData.filter(row => 
-      (row.width == 20 && row.height == 30) || 
-      (row.width == 25 && row.height == 35) ||
-      row.productName.includes('20') && row.productName.includes('30')
+      (row.width !== null && row.width !== undefined && row.width == 20 && row.height !== null && row.height !== undefined && row.height == 30) || 
+      (row.width !== null && row.width !== undefined && row.width == 25 && row.height !== null && row.height !== undefined && row.height == 35) ||
+      (row.product && typeof row.product === 'string' && row.product.includes('20') && row.product.includes('30'))
     );
     
     // 20x30이 없으면 해당 회사의 대표 제품(가장 많이 등장한 제품) 선택
@@ -411,25 +405,26 @@ function createChart() {
     chartData.push({
       x: cheapestPerDate.map(row => row.dateObj),
       y: cheapestPerDate.map(row => row.convertedPrice),
-      mode: 'lines+markers',
+      mode: 'lines',
       name: company,
       line: {
         color: CONFIG.COMPANY_COLORS[company] || '#888',
         width: 2
       },
       marker: {
-        size: 8
+        size: 0,
+        opacity: 0
       },
       hovertemplate: 
         '%{x|%Y-%m-%d}<br>' +
         `${company}<br>` +
-        '20×30 환산단가: %{y:,}원<extra></extra>'
+        `20x30 : ${row.width !== null && row.width !== undefined ? row.width : ''}x${row.height !== null && row.height !== undefined ? row.height : ''} ${row.product !== null && row.product !== undefined ? row.product : ''} ${row.convertedPrice.toLocaleString()}<extra></extra>`
     });
   });
   
   const layout = {
-    paper_bgcolor: 'transparent',
-    plot_bgcolor: 'rgba(26, 26, 46, 0.8)',
+    paper_bgcolor: '#1a1a2e',
+    plot_bgcolor: '#16213e',
     font: {
       family: 'Noto Sans KR, sans-serif',
       size: 13,
