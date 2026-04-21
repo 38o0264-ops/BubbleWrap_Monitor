@@ -380,35 +380,45 @@ function createChart() {
   companies.forEach(company => {
     const companyData = appData.processedData.filter(row => row && row.company === company);
     
-    // 20x30 제품만 필터링 (가장 표준적인 사이즈)
+    // 20x30 제품만 필터링 (가장 표준적인 사이즈) - 최대한 안전하게
     const standardSizeData = companyData.filter(row => {
+      // 가장 기본적인 체크
+      if (!row) return false;
+      
       try {
-        if (!row) return false;
+        // width/height 체크 - 가장 안전한 방법
+        let is20x30 = false;
+        let is25x35 = false;
         
-        // 안전한 필드 접근
-        const width = row.width;
-        const height = row.height;
-        const product = row.product;
-        
-        // width/height 체크
-        const is20x30 = (width !== null && width !== undefined && width == 20 && 
-                       height !== null && height !== undefined && height == 30);
-        const is25x35 = (width !== null && width !== undefined && width == 25 && 
-                       height !== null && height !== undefined && height == 35);
-        
-        // product 체크
-        let hasProductMatch = false;
-        if (product && typeof product === 'string') {
-          try {
-            hasProductMatch = product.includes('20') && product.includes('30');
-          } catch (e) {
-            hasProductMatch = false;
+        try {
+          const width = row.width;
+          const height = row.height;
+          
+          if (width !== null && width !== undefined && height !== null && height !== undefined) {
+            is20x30 = (width == 20 && height == 30);
+            is25x35 = (width == 25 && height == 35);
           }
+        } catch (e) {
+          // width/height 접근 오류 무시
+        }
+        
+        // product 체크 - 가장 안전한 방법
+        let hasProductMatch = false;
+        
+        try {
+          const product = row.product;
+          
+          if (product && typeof product === 'string') {
+            hasProductMatch = (product.indexOf('20') !== -1 && product.indexOf('30') !== -1);
+          }
+        } catch (e) {
+          // product 접근 오류 무시
         }
         
         return is20x30 || is25x35 || hasProductMatch;
+        
       } catch (e) {
-        console.log('Filter error for row:', e);
+        // 모든 오류 무시하고 false 반환
         return false;
       }
     });
