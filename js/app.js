@@ -330,6 +330,9 @@ function createDataTable() {
       statusText = '●';
     } else if (row.status === '오류') {
       statusClass = 'status-error';
+      statusText = '✖️';
+    }
+    
     html += `
       <tr class="${rowClass}" style="background-color: ${bgColor};">
         <td>${row.company}</td>
@@ -375,14 +378,40 @@ function createChart() {
   const companies = [...new Set(appData.processedData.map(row => row.company))];
   
   companies.forEach(company => {
-    const companyData = appData.processedData.filter(row => row.company === company);
+    const companyData = appData.processedData.filter(row => row && row.company === company);
     
     // 20x30 제품만 필터링 (가장 표준적인 사이즈)
-    const standardSizeData = companyData.filter(row => 
-      (row.width !== null && row.width !== undefined && row.width == 20 && row.height !== null && row.height !== undefined && row.height == 30) || 
-      (row.width !== null && row.width !== undefined && row.width == 25 && row.height !== null && row.height !== undefined && row.height == 35) ||
-      (row.product && typeof row.product === 'string' && row.product.includes('20') && row.product.includes('30'))
-    );
+    const standardSizeData = companyData.filter(row => {
+      try {
+        if (!row) return false;
+        
+        // 안전한 필드 접근
+        const width = row.width;
+        const height = row.height;
+        const product = row.product;
+        
+        // width/height 체크
+        const is20x30 = (width !== null && width !== undefined && width == 20 && 
+                       height !== null && height !== undefined && height == 30);
+        const is25x35 = (width !== null && width !== undefined && width == 25 && 
+                       height !== null && height !== undefined && height == 35);
+        
+        // product 체크
+        let hasProductMatch = false;
+        if (product && typeof product === 'string') {
+          try {
+            hasProductMatch = product.includes('20') && product.includes('30');
+          } catch (e) {
+            hasProductMatch = false;
+          }
+        }
+        
+        return is20x30 || is25x35 || hasProductMatch;
+      } catch (e) {
+        console.log('Filter error for row:', e);
+        return false;
+      }
+    });
     
     // 20x30이 없으면 해당 회사의 대표 제품(가장 많이 등장한 제품) 선택
     let chartDataRows = standardSizeData;
@@ -418,7 +447,7 @@ function createChart() {
       hovertemplate: 
         '%{x|%Y-%m-%d}<br>' +
         `${company}<br>` +
-        `20x30 : ${row.width !== null && row.width !== undefined ? row.width : ''}x${row.height !== null && row.height !== undefined ? row.height : ''} ${row.product !== null && row.product !== undefined ? row.product : ''} ${row.convertedPrice.toLocaleString()}<extra></extra>`
+        `20x30 : ${row.width !== null && row.width !== undefined ? row.width : ''}x${row.height !== null && row.height !== undefined ? row.height : ''} ${row.product !== null && row.product !== undefined ? row.product : ''} ${row.convertedPrice !== null && row.convertedPrice !== undefined ? row.convertedPrice.toLocaleString() : ''}<extra></extra>`
     });
   });
   
