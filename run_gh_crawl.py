@@ -11,6 +11,9 @@ def load_data():
         try:
             df = pd.read_csv(CSV_PATH)
             df["date"] = pd.to_datetime(df["date"], format='mixed').dt.normalize()
+            # time 열이 없으면 기본값 추가
+            if "time" not in df.columns:
+                df["time"] = "00:00:00"
             return df
         except Exception as e:
             print(f"데이터 로드 오류: {e}")
@@ -18,7 +21,7 @@ def load_data():
 
 def run_update():
     # KST (한국시간, UTC+9) 기준 현재 시간
-    kst_now = datetime.datetime.now() + datetime.timedelta(hours=9)
+    kst_now = datetime.datetime.now()
     print(f"[{kst_now}] 클라우드 크롤링 시작...")
     try:
         results = crawler.crawl_all()
@@ -37,7 +40,8 @@ def run_update():
             if last_day < today:
                 temp_df = df_full[df_full["date"] == last_day].copy()
                 temp_df["date"] = today
-                temp_df["status"] = "⚪ 대기" 
+                temp_df["status"] = "⚪ 대기"
+                temp_df["time"] = "00:00:00"
                 df_full = pd.concat([df_full, temp_df], ignore_index=True)
             else:
                 today = last_day
@@ -61,6 +65,7 @@ def run_update():
                     df_full.loc[mask, "product_url"] = item.get("product_url", "")
                     df_full.loc[mask, "availability"] = item.get("availability", "판매중")
                     df_full.loc[mask, "status"] = "🟢 수집"
+                    df_full.loc[mask, "time"] = kst_now.strftime("%H:%M:%S")
                     matched += 1
         
         # 저장
