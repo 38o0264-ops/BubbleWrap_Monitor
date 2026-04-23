@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirCap Korean Solution</title>
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  
+  <!-- PapaParse for CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Login Modal -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="password-modal glassmorphism">
+      <h2>Security App Access</h2>
+      <p>This web app is for internal personnel only.</p>
+      <form id="password-form" class="password-input-group">
+        <input type="text" id="app-username" name="username" autocomplete="username" value="admin" style="display:none;" aria-hidden="true">
+        <input type="password" id="app-password" name="password" autocomplete="current-password" placeholder="Enter password" required style="letter-spacing: -1px;">
+        <p id="password-error" class="error-msg hidden">Password does not match.</p>
+        <button type="button" id="submit-password" class="btn primary" style="white-space: nowrap;">Confirm</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div id="loading-indicator" class="loading-indicator hidden">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Loading data...</p>
+    </div>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div id="main-dashboard" class="main-dashboard hidden">
+    <!-- Header -->
+    <div class="main-header">
+      <h1>AirCap Market Integrated Monitoring</h1>
+      <p>4 Companies × Main Products | 20×30 Converted Final Price Comparison Analysis</p>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metrics-container">
+      <div class="metric-card">
+        <div class="metric-label">Latest Survey Time</div>
+        <div class="metric-value" id="last-update-time" style="font-size: 1.4rem;">-</div>
+      </div>
+      
+      <div class="metric-card">
+        <div class="metric-label">Lowest Unit Price (20×30)</div>
+        <div class="metric-value highlight-green" id="cheapest-price">-</div>
+        <div class="metric-company" id="cheapest-company" style="color: #424242 !important;">-</div>
+      </div>
+      
+      <div class="metric-card news-card">
+        <div class="metric-label">Today's Naphtha News</div>
+        <div class="news-content">
+          <ul id="news-list">
+            <li>Air cap raw material supply shortage and delivery packaging material procurement disruption due to soaring crude oil prices</li>
+            <li>Packaging air cap sub-material market supply availability rate plummets to 10% range, threatening logistics operations</li>
+            <li>Focus on air cap supply chain restructuring and efficiency improvement through supplier diversification and safe inventory management</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Analysis Table -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Real-time Price Comparison by Supplier/Main Products</div>
+      </div>
+      <div class="table-container" id="data-table-container">
+        <!-- Data table will be inserted here -->
+      </div>
+    </div>
+
+    <!-- Price Trend Chart -->
+    <div class="section">
+      <div class="section-title">20×30 Converted Final Unit Price Trend</div>
+      <div id="price-chart" class="chart-container"></div>
+      <div id="chart-info" class="chart-info hidden">
+        Price trend graph will be displayed when <strong>2+ days of data</strong> is entered.<br>
+        Please add data for different dates.
+      </div>
+    </div>
+
+    <!-- Full History Table -->
+    <div class="section">
+      <details class="expander">
+        <summary>View All Data History</summary>
+        <div class="table-container" id="history-table-container">
+          <!-- History table will be inserted here -->
+        </div>
+      </details>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      AirCap Market Unit Price Integrated Monitoring System v1.0 &nbsp;|&nbsp;
+      Formula: (Unit Price + Shipping÷Quantity) ÷ (Width×Height) × 600 = 20×30 Converted Unit Price
+    </footer>
+  </div>
+
+  <script src="app_korean_fixed.js?v=202404229999"></script>
+</body>
+</html>

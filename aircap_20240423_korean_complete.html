@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirCap 시장 단가 통합 모니터링</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 30px;
+      background: #f8f9fa;
+    }
+
+    .metric-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .metric-card h3 {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      font-weight: 400;
+    }
+
+    .metric-card .value {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .chart-section {
+      padding: 30px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .chart-section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+    }
+
+    #price-chart {
+      width: 100%;
+      height: 400px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+    }
+
+    .data-section {
+      padding: 30px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+    }
+
+    td {
+      color: #333;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .cheapest {
+      background: #e8f5e9 !important;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(102, 126, 234, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .login-box h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+
+    .login-box p {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .password-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1.1em;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: border-color 0.3s ease;
+    }
+
+    .password-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .login-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .error-message {
+      color: #ff4b4b;
+      margin-top: 15px;
+      font-size: 0.9em;
+    }
+
+    .sold-out-row {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .chart-info {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .details-section summary {
+      cursor: pointer;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .details-section summary:hover {
+      background: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-box">
+      <h2>보안 앱 접근</h2>
+      <p>이 웹 앱은 내부 직원 전용입니다.<br>비밀번호를 입력해주세요.</p>
+      <form id="password-form">
+        <input type="password" id="app-password" class="password-input" placeholder="비밀번호 입력" maxlength="10">
+        <br>
+        <button type="submit" class="login-btn" id="submit-password">확인</button>
+      </form>
+      <div id="password-error" class="error-message hidden">비밀번호가 일치하지 않습니다.</div>
+    </div>
+  </div>
+
+  <div id="main-dashboard" class="container hidden">
+    <div class="header">
+      <h1>AirCap 시장 단가 통합 모니터링</h1>
+      <p>4개사 × 주요 상품 | 20×30 환산 최종 단가 비교 분석</p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <h3>마지막 업데이트</h3>
+        <div id="last-update-time" class="value">-</div>
+      </div>
+      <div class="metric-card">
+        <h3>최저가</h3>
+        <div id="cheapest-price" class="value">-</div>
+      </div>
+      <div class="metric-card">
+        <h3>최저가 업체</h3>
+        <div id="cheapest-company" class="value">-</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h2>20×30 환산 단가 추이</h2>
+      <div id="chart-info" class="chart-info hidden">차트 데이터가 없습니다.</div>
+      <div id="price-chart"></div>
+    </div>
+
+    <div class="data-section">
+      <h2>최신 데이터</h2>
+      <div id="loading-indicator" class="loading-indicator hidden">데이터 로딩 중...</div>
+      <div id="data-table-container"></div>
+    </div>
+
+    <div class="data-section">
+      <details class="details-section">
+        <summary>전체 이력 보기</summary>
+        <div id="history-table-container"></div>
+      </details>
+    </div>
+
+    <div class="footer">
+      AirCap 시장 단가 통합 모니터링 시스템 v1.0 &nbsp;|&nbsp;
+      산식: (단가+배송÷입수)÷(폭×높이)×600=20×30 환산 단가
+    </div>
+  </div>
+
+  <script>
+  /* Korean AirCap Monitoring App - INLINE VERSION */
+  /* Date: 2024-04-23 */
+
+  const CONFIG = {
+    CSV_URL: 'https://raw.githubusercontent.com/38o0264-ops/BubbleWrap_Monitor/main/price_history.csv',
+    PASSWORD: '10077',
+    COMPANY_COLORS: {
+      'Boxmall': '#3366ff',
+      'Vinyl.com': '#ff6b35',
+      'Packmall': '#00d68f',
+      'General': '#9e9e9e'
+    }
+  };
+
+  const appData = {
+    rawData: [],
+    processedData: [],
+    latestDate: null,
+    isAuthenticated: false
+  };
+
+  function initializeApp() {
+    console.log('Initializing Korean AirCap App...');
+    setupEventListeners();
+    checkAuthentication();
+  }
+
+  function setupEventListeners() {
+    const submitBtn = document.getElementById('submit-password');
+    const passwordInput = document.getElementById('app-password');
+    const passwordForm = document.getElementById('password-form');
+    
+    if (submitBtn && passwordInput && passwordForm) {
+      submitBtn.addEventListener('click', handlePasswordSubmit);
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handlePasswordSubmit();
+        }
+      });
+      passwordForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handlePasswordSubmit();
+      });
+    }
+  }
+
+  function checkAuthentication() {
+    const sessionAuth = sessionStorage.getItem('aircap_authenticated');
+    if (sessionAuth === 'true') {
+      appData.isAuthenticated = true;
+      showMainDashboard();
+      loadData();
+    } else {
+      showLoginModal();
+    }
+  }
+
+  function handlePasswordSubmit() {
+    const passwordInput = document.getElementById('app-password');
+    const errorElement = document.getElementById('password-error');
+    const password = passwordInput.value.trim();
+    
+    if (password === CONFIG.PASSWORD) {
+      appData.isAuthenticated = true;
+      sessionStorage.setItem('aircap_authenticated', 'true');
+      hideLoginModal();
+      showMainDashboard();
+      loadData();
+    } else {
+      errorElement.classList.remove('hidden');
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  }
+
+  function showLoginModal() {
+    const loginOverlay = document.getElementById('login-overlay');
+    const mainDashboard = document.getElementById('main-dashboard');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    
+    if (loginOverlay) loginOverlay.classList.remove('hidden');
+    if (mainDashboard) mainDashboard.classList.add('hidden');
+    if (loadingIndicator) loadingIndicator.classList.add('hidden');
+  }
+
+  function hideLoginModal() {
+    const loginOverlay = document.getElementById('login-overlay');
+    const errorElement = document.getElementById('password-error');
+    const passwordInput = document.getElementById('app-password');
+    
+    if (loginOverlay) loginOverlay.classList.add('hidden');
+    if (errorElement) errorElement.classList.add('hidden');
+    if (passwordInput) passwordInput.value = '';
+  }
+
+  function showMainDashboard() {
+    const mainDashboard = document.getElementById('main-dashboard');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    
+    if (mainDashboard) mainDashboard.classList.remove('hidden');
+    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+  }
+
+  function showLoadingIndicator() {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+  }
+
+  function hideLoadingIndicator() {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) loadingIndicator.classList.add('hidden');
+  }
+
+  function loadData() {
+    showLoadingIndicator();
+    
+    Papa.parse(CONFIG.CSV_URL, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        appData.rawData = results.data.filter(row => row.date && row.company && row.product);
+        processData();
+        updateMetrics();
+        createDataTable();
+        createChart();
+        createHistoryTable();
+        hideLoadingIndicator();
+      },
+      error: function(error) {
+        console.error('CSV loading error:', error);
+        hideLoadingIndicator();
+        alert('데이터 로딩 오류');
+      }
+    });
+  }
+
+  function processData() {
+    appData.rawData.forEach(row => {
+      if (row.date) {
+        try {
+          row.dateObj = new Date(row.date);
+          if (isNaN(row.dateObj.getTime())) {
+            const parts = row.date.split('-');
+            if (parts.length === 3) {
+              row.dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+          }
+        } catch (e) {
+          console.error('Date parsing error:', e);
+        }
+      }
+    });
+    
+    const dates = appData.rawData
+      .map(row => row.dateObj)
+      .filter(date => date && !isNaN(date.getTime()));
+    
+    appData.latestDate = dates.length > 0 ? new Date(Math.max(...dates)) : null;
+    
+    appData.processedData = appData.rawData.map(row => {
+      const unitPrice = parseFloat(row.unit_price) || 0;
+      const qtyPerBox = parseFloat(row.qty_per_box) || 1;
+      const shipping = parseFloat(row.shipping_per_box) || 0;
+      const width = parseFloat(row.width) || 1;
+      const height = parseFloat(row.height) || 1;
+      const vatStatus = row.vat_status || 'Not included';
+      
+      const boxPrice = unitPrice * qtyPerBox;
+      let realCost = unitPrice + (shipping / qtyPerBox);
+      if (vatStatus === 'Not included') {
+        realCost *= 1.1;
+      }
+      
+      const convertedPrice = (realCost / (width * height)) * 600;
+      
+      return {
+        ...row,
+        boxPrice: Math.round(boxPrice),
+        realCost: Math.round(realCost),
+        convertedPrice: Math.round(convertedPrice)
+      };
+    });
+  }
+
+  function updateMetrics() {
+    const lastUpdateElement = document.getElementById('last-update-time');
+    const cheapestPriceElement = document.getElementById('cheapest-price');
+    const cheapestCompanyElement = document.getElementById('cheapest-company');
+    
+    if (appData.latestDate) {
+      const formattedDate = appData.latestDate.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      if (lastUpdateElement) lastUpdateElement.textContent = formattedDate;
+    }
+    
+    const latestData = appData.processedData.filter(row => 
+      row.dateObj && appData.latestDate && 
+      row.dateObj.toDateString() === appData.latestDate.toDateString()
+    );
+    
+    if (latestData.length > 0) {
+      const cheapest = latestData.reduce((min, row) => 
+        row.convertedPrice < min.convertedPrice ? row : min
+      );
+      
+      if (cheapestPriceElement) cheapestPriceElement.textContent = 
+        cheapest.convertedPrice.toLocaleString() + '원';
+      if (cheapestCompanyElement) cheapestCompanyElement.textContent = 
+        `${cheapest.company} · ${cheapest.product}`;
+    }
+  }
+
+  function createDataTable() {
+    const container = document.getElementById('data-table-container');
+    if (!container) return;
+    
+    const latestData = appData.processedData.filter(row => 
+      row.dateObj && appData.latestDate && 
+      row.dateObj.toDateString() === appData.latestDate.toDateString()
+    );
+    
+    latestData.sort((a, b) => {
+      const aIsBoxmall = a.company.indexOf('Boxmall') !== -1;
+      const bIsBoxmall = b.company.indexOf('Boxmall') !== -1;
+      if (aIsBoxmall && !bIsBoxmall) return -1;
+      if (!aIsBoxmall && bIsBoxmall) return 1;
+      return a.convertedPrice - b.convertedPrice;
+    });
+    
+    const minPrice = latestData.length > 0 
+      ? Math.min(...latestData.map(d => d.convertedPrice))
+      : 0;
+    
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>회사명</th>
+            <th>상품명</th>
+            <th>사용범위</th>
+            <th>판매여부</th>
+            <th>규격 (cm)</th>
+            <th style="text-align: right;">단가</th>
+            <th style="text-align: right;">입수량</th>
+            <th style="text-align: right;">배송비</th>
+            <th style="text-align: right;">박스가격</th>
+            <th style="text-align: right;">VAT</th>
+            <th style="text-align: right;">배송+VAT단가</th>
+            <th style="text-align: right; color: #2E7D32;">20*30환산단가</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    latestData.forEach(row => {
+      const isCheapest = row.convertedPrice === minPrice;
+      const bgColor = isCheapest ? '#E8F5E9' : 'transparent';
+      const isSoldOut = row.availability !== 'For sale';
+      const rowClass = isSoldOut ? 'sold-out-row' : '';
+      
+      const shipping = parseFloat(row.shipping_per_box) || 0;
+      const shippingDisplay = shipping === 0 ? 
+        '<span style="color: #2E7D32;">무료배송</span>' : 
+        shipping.toLocaleString() + '원';
+      
+      const availabilityHtml = isSoldOut 
+        ? '<span style="color: #ff4b4b; font-weight: 500;">품절</span>'
+        : `<a href="${row.product_url || '#'}" target="_blank">판매중</a>`;
+      
+      html += `
+        <tr class="${rowClass}" style="background-color: ${bgColor};">
+          <td>${row.company}</td>
+          <td>${row.product}</td>
+          <td>${row.usage_scope || '일반'}</td>
+          <td>${availabilityHtml}</td>
+          <td style="color: #666;">${row.width}x${row.height}</td>
+          <td style="text-align: right;">${Math.round(row.unit_price).toLocaleString()}원</td>
+          <td style="text-align: right;">${Math.round(row.qty_per_box).toLocaleString()}개</td>
+          <td style="text-align: right;">${shippingDisplay}</td>
+          <td style="text-align: right;">${row.boxPrice.toLocaleString()}원</td>
+          <td style="text-align: right;">${row.vat_status || '별도'}</td>
+          <td style="text-align: right;">${row.realCost.toLocaleString()}원</td>
+          <td style="text-align: right; font-weight: 700;">${row.convertedPrice.toLocaleString()}원</td>
+        </tr>
+      `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function createChart() {
+    const chartContainer = document.getElementById('price-chart');
+    const chartInfo = document.getElementById('chart-info');
+    
+    if (!chartContainer) return;
+    
+    chartInfo.classList.add('hidden');
+    
+    const chartData = [];
+    const companies = [...new Set(appData.processedData.map(row => row.company))];
+    
+    companies.forEach(company => {
+      try {
+        const companyData = appData.processedData.filter(row => row && row.company === company);
+        
+        const standardSizeData = companyData.filter(row => {
+          if (!row || !row.width || !row.height) return false;
+          
+          let is20x30 = false;
+          let is25x35 = false;
+          let hasProductMatch = false;
+          
+          try {
+            const width = parseFloat(row.width);
+            const height = parseFloat(row.height);
+            
+            if (!isNaN(width) && !isNaN(height)) {
+              is20x30 = (width == 20 && height == 30);
+              is25x35 = (width == 25 && height == 35);
+            }
+          } catch (e) {
+            // Ignore width/height access error
+          }
+          
+          try {
+            const product = row.product;
+            
+            if (product && typeof product === 'string') {
+              hasProductMatch = (product.indexOf('20') !== -1 && product.indexOf('30') !== -1);
+            }
+          } catch (e) {
+            // Ignore product access error
+          }
+          
+          return is20x30 || is25x35 || hasProductMatch;
+          
+        });
+        
+        let chartDataRows = standardSizeData;
+        if (chartDataRows.length === 0) {
+          chartDataRows = companyData;
+        }
+        
+        const dateGroups = {};
+        chartDataRows.forEach(row => {
+          try {
+            if (row && row.dateObj) {
+              const dateKey = row.dateObj.toDateString();
+              if (!dateGroups[dateKey] || row.convertedPrice < dateGroups[dateKey].convertedPrice) {
+                dateGroups[dateKey] = row;
+              }
+            }
+          } catch (e) {
+            // Ignore date grouping error
+          }
+        });
+        
+        const cheapestPerDate = Object.values(dateGroups).sort((a, b) => 
+          new Date(a.date) - new Date(b.date)
+        );
+        
+        if (cheapestPerDate.length > 0) {
+          chartData.push({
+            x: cheapestPerDate.map(row => row.dateObj),
+            y: cheapestPerDate.map(row => row.convertedPrice),
+            mode: 'lines',
+            name: company,
+            line: {
+              color: CONFIG.COMPANY_COLORS[company] || '#888',
+              width: 2
+            },
+            marker: {
+              size: 0,
+            },
+            hovertemplate: 
+              '%{x|%Y-%m-%d}<br>' +
+              `${company}<br>` +
+              '20x30 환산단가: %{y:,}원<extra></extra>'
+          });
+        }
+        
+      } catch (e) {
+        console.log(`Error processing company ${company}:`, e);
+      }
+    });
+    
+    if (chartData.length === 0) {
+      chartInfo.classList.remove('hidden');
+      return;
+    }
+    
+    const layout = {
+      title: {
+        text: '20×30 환산 단가 추이',
+        font: { size: 16 }
+      },
+      xaxis: {
+        title: '날짜',
+        type: 'date',
+        gridcolor: 'rgba(0,0,0,0.1)'
+      },
+      yaxis: {
+        title: '가격 (원)',
+        gridcolor: 'rgba(0,0,0,0.1)'
+      },
+      plot_bgcolor: 'rgba(248,249,250,0.8)',
+      paper_bgcolor: 'white',
+      font: {
+        family: 'Noto Sans KR, sans-serif'
+      },
+      showlegend: true,
+      legend: {
+        x: 0,
+        y: 1,
+        bgcolor: 'rgba(0,0,0,0.3)',
+        bordercolor: 'rgba(255,255,255,0.1)',
+        borderwidth: 1
+      },
+      margin: { l: 60, r: 20, t: 60, b: 60 }
+    };
+    
+    const config = {
+      responsive: true,
+      displayModeBar: false
+    };
+    
+    Plotly.newPlot(chartContainer, chartData, layout, config);
+  }
+
+  function createHistoryTable() {
+    const container = document.getElementById('history-table-container');
+    if (!container) return;
+    
+    const sortedData = [...appData.processedData].sort((a, b) => {
+      if (!a.dateObj || !b.dateObj) return 0;
+      return b.dateObj - a.dateObj;
+    });
+    
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>회사</th>
+            <th>상품</th>
+            <th>규격</th>
+            <th style="text-align: right;">단가</th>
+            <th style="text-align: right;">환산단가</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    sortedData.forEach(row => {
+      if (!row.dateObj) return;
+      
+      html += `
+        <tr>
+          <td>${row.dateObj.toLocaleDateString('ko-KR')}</td>
+          <td>${row.company}</td>
+          <td>${row.product}</td>
+          <td style="color: #666;">${row.width}x${row.height}</td>
+          <td style="text-align: right;">${Math.round(row.unit_price).toLocaleString()}원</td>
+          <td style="text-align: right; font-weight: 600;">${row.convertedPrice.toLocaleString()}원</td>
+        </tr>
+      `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>
